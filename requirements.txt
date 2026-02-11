@@ -1,6 +1,7 @@
 fastapi
 uvicorn
 gunicorn
+python-dotenv
 langchain
 langgraph
 openai
