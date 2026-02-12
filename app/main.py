@@ -4,7 +4,7 @@ from fastapi import status
 from dotenv import load_dotenv
 from pathlib import Path
 
-load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+load_dotenv()
 
 from fastapi import FastAPI, Body
 from app.agent.graph import agent_graph
