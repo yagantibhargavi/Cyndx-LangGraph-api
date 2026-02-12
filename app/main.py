@@ -22,6 +22,7 @@ class MessageRequest(BaseModel):
 
 
 app = FastAPI()
+session_store = {}
 
 import time
 
@@ -51,6 +52,8 @@ sessions = {}
 @app.post("/sessions", status_code=status.HTTP_201_CREATED)
 def create_session(req: CreateSessionRequest = Body(default={})):
     session_id = f"sess_{uuid.uuid4().hex[:12]}"
+    session_store[session_id] = { "messages": []
+    }
     now = datetime.utcnow().isoformat() + "Z"
 
     agent_cfg = req.agent_config or AgentConfig()
@@ -87,7 +90,20 @@ async def send_message(session_id: str, payload: MessageRequest):
         "response": "",
         "next_node": "planner",
     }
+from fastapi import HTTPException
 
+@app.get("/sessions/{session_id}/history")
+def get_session_history(session_id: str):
+    session = session_store.get(session_id)
+
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    return {
+        "session_id": session_id,
+        "message_count": len(session["messages"]),
+        "messages": session["messages"]
+    }
     # Call LangGraph
     result = await agent_graph.ainvoke(state)
 
