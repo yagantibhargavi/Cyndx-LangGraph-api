@@ -1,3 +1,19 @@
-.envvenv/
-.env
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+
+# Terraform provider binaries
+app/terraform/.terraform/
+
+# Python
 venv/
+__pycache__/
+*.pyc
+
+# Env files
+.env
+
+# Mac / system
+.DS_Store
