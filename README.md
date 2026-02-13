@@ -14,6 +14,7 @@ Production-ready health monitoring
 
 Python
 FastAPI
+SwaggerUI
 Docker
 AWS ECR
 AWS App Runner
