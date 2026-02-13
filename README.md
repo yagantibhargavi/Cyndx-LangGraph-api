@@ -1,170 +1,223 @@
-Cyndx Engineering Assessment – LangGraph API Deployment
-Overview
+Cyndx Engineering Assessment — LangGraph Agent API
 
-This project implements a containerized FastAPI service and deployment workflow using Docker, AWS (ECR + App Runner), and Terraform for infrastructure provisioning.
+This project implements a FastAPI-based conversational agent service powered by LangGraph, containerized with Docker, and provisioned using Terraform.
+It supports session-based interactions, message history, and agent-driven responses.
 
-The goal is to demonstrate:
-Backend API development
-Containerization
-Cloud deployment
-Infrastructure as Code (IaC)
-Production-ready health monitoring
+🧭 Architecture Overview
+flowchart TD
+    User --> FastAPI
+    FastAPI --> SessionStore
+    FastAPI --> LangGraphAgent
+    LangGraphAgent --> LLM
+    Terraform --> AWSInfra
+    Docker --> AppRunner
 
-#Tech Stack
+# Components
 
-Python
-FastAPI
-SwaggerUI
-Docker
-AWS ECR
-AWS App Runner
-Terraform
-LangGraph
+* FastAPI service
+REST endpoints
+Session management
+Swagger UI
 
-#Project Structure
-.
-├── app/
-│   ├── agent/
-│   │   ├── graph.py
-│   │   ├── nodes.py
-│   │   └── state.py
-│   │
-│   ├── terraform/
-│   │   ├── main.tf
-│   │   ├── ecr.tf
-│   │   └── .terraform.lock.hcl
-│   │
-│   └── main.py
-│
-├── Dockerfile
-├── requirements.txt
-├── .env
-└── README.md
+*LangGraph agent
+Planner + execution nodes
+Maintains conversational state
 
+*Session store
+In-memory session/message state
 
-#Running Locally
-1) Create virtual environment
+*Docker
+Containerized runtime
+
+*Terraform
+Infrastructure provisioning
+Container registry + compute setup
+
+*Cloud
+AWS ECR / App Runner (deployment-ready)
+
+# 🗂 Project Structure
+app/
+  main.py                → FastAPI app
+  agent/
+    graph.py             → LangGraph workflow
+    nodes.py             → agent nodes
+    state.py             → state schema
+
+terraform/
+  main.tf                → infra resources
+  ecr.tf                 → container registry
+
+Dockerfile
+requirements.txt
+README.md
+
+🚀 Local Development Guide
+1. Clone repo
+git clone <repo-url>
+cd cyndx-langgraph-api
+
+2. Setup environment
 python -m venv venv
 source venv/bin/activate
-2) Install dependencies
+
+3. Install dependencies
 pip install -r requirements.txt
-3) Run API
-uvicorn app.main:app --host 0.0.0.0 --port 8000
-4) Health Check
+
+4. Configure env
+Create .env
+GROQ_API_KEY=your_key_here
+
+5. Run locally
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+Swagger:
+http://localhost:8000/docs
+
+Health:
 http://localhost:8000/health
 
-Response example:
-
-{
-  "status": "healthy",
-  "version": "1.0.0"
-}
-
-#Docker Setup
-Build Docker image
+🐳 Run with Docker
+Build:
 docker build -t cyndx-langgraph-api .
-Run container
+Run:
 docker run -p 8000:8000 cyndx-langgraph-api
-Test
-http://localhost:8000/health
 
-#AWS Deployment
-Container Registry (ECR)
-Create repository in AWS ECR
-Authenticate Docker to AWS
-aws ecr get-login-password --region us-east-1 \
-| docker login --username AWS --password-stdin <account>.dkr.ecr.us-east-1.amazonaws.com
-Tag image
-docker tag cyndx-langgraph-api:latest <account>.dkr.ecr.us-east-1.amazonaws.com/cyndx-langgraph-api:latest
-Push image
-docker push <account>.dkr.ecr.us-east-1.amazonaws.com/cyndx-langgraph-api:latest
+☁️ Deployment Guide (Terraform)
+Prerequisites
+AWS account
+Terraform installed
+Docker installed
+AWS CLI configured
 
-#AWS App Runner
-App Runner is used to deploy the containerized API.
-Configuration:
-Image source: ECR
-Port: 8000
-Health check path: /health
-Protocol: HTTP
-App Runner provisions infrastructure and exposes a public endpoint automatically.
-
-Terraform (Infrastructure as Code)
-Terraform is used to provision:
-AWS ECR repository
-App Runner service
-IAM roles
-
-Setup
-cd infra
+* Steps
+1. Initialize Terraform
+cd terraform
 terraform init
+
+2. Plan infrastructure
 terraform plan
+
+3. Apply infra
 terraform apply
 
-Outputs include:
-ECR repository URL
-App Runner service reference
+*Creates:
+ECR repository
+Container runtime environment
 
-#API Documentation (Swagger UI)
+4. Push Docker image
+docker tag cyndx-langgraph-api:latest <ECR_URI>
+docker push <ECR_URI>
 
-Interactive API documentation is automatically generated using FastAPI.
-After running the service locally:
+5. Deployment Status (Current)
+Terraform infra provisioning: ✅ completed
+Container build/push: ✅ completed
+App Runner deployment: ❌ failing due to health check failure
+Error: Health check failed on protocol HTTP [Path: '/health'] [Port: '8000']
+Local Docker + Swagger: ✅ working
+
+* What I attempted
+Verified /health locally: ✅
+Configured App Runner health check: HTTP /health port 8000
+Rebuilt and pushed image to ECR multiple times
+Next step would be aligning App Runner port with container port using PORT env var
+
+🧠 Design Decisions
+* Why FastAPI?
+async-first
+lightweight
+built-in Swagger
+production ready
+
+* Why LangGraph?
+explicit graph-based agent flows
+stateful conversation modeling
+modular node design
+
+*Why in-memory session store?
+fast iteration
+minimal infra dependency
+easy debugging
+
+*Future improvement:
+Redis / DynamoDB
+
+*Why Docker?
+reproducibility
+deployment portability
+cloud-ready
+
+*Why Terraform?
+infra as code
+repeatable deployment
+scalable cloud provisioning
+
+⚖️ Trade-offs & Limitations
+* In-memory sessions
+lost on restart
+not horizontally scalable
+
+* No authentication
+API open
+needs auth layer
+
+* No observability stack
+logs local only
+no tracing/metrics
+
+* Limited CI/CD
+manual deploy
+future: GitHub Actions
+
+* LLM dependency
+response latency
+cost considerations
+
+📡 API Reference
 Swagger UI:
-http://localhost:8000/docs
-ReDoc:
-http://localhost:8000/redoc
+/docs
 
-#Health Monitoring
-
-The service exposes:
+Endpoints
+Health
 GET /health
-Used by:
-Load balancer checks
-App Runner readiness
-Monitoring systems
-Design Decisions
-FastAPI chosen for performance and async support
-Docker ensures reproducible deployment
-App Runner simplifies container hosting
-Terraform provides version-controlled infrastructure
-Health endpoint ensures production readiness
 
-#LangGraph Agent Execution
-POST /run
-Request:
-
-{
-  "query": "Analyze company growth signals"
-}
+Create session
+POST /sessions
 
 Response:
 
 {
-  "result": "Agent reasoning output"
+  "session_id": "...",
+  "status": "active"
 }
 
-#Challenges & Notes
+Get session history
+GET /sessions/{session_id}/history
 
-Deployment health checks require correct port mapping
-Container must bind to 0.0.0.0
-Health endpoint must respond quickly
-AWS IAM permissions required for ECR access
+Send message
+POST /sessions/{session_id}/messages
 
-#Future Improvements
+Delete session
+DELETE /sessions/{session_id}
 
-CI/CD pipeline (GitHub Actions)
-CloudWatch logging
-Auto scaling policies
-API authentication
-Monitoring dashboards
+🧪 Example Request
+curl -X POST http://localhost:8000/sessions
+curl -X POST http://localhost:8000/sessions/{id}/messages \
+-H "Content-Type: application/json" \
+-d '{"content":"Hello"}'
 
-Author
+📘 Swagger
+Auto-generated docs available at:
+http://localhost:8000/docs
+
+🔮 Future Improvements
+persistent session store
+CI/CD pipeline
+authentication
+monitoring
+autoscaling infra
+streaming LLM responses
+
+👩‍💻 Author
 Bhargavi
 
-Submission Notes
-
-API runs locally
-Docker container built successfully
-Infrastructure defined via Terraform
-Deployment configured using AWS App Runner
-Health endpoint implemented for service monitoring
-This repository demonstrates full-stack backend deployment readiness including containerization and infrastructure automation.
