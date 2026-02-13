@@ -103,6 +103,15 @@ Outputs include:
 ECR repository URL
 App Runner service reference
 
+#API Documentation (Swagger UI)
+
+Interactive API documentation is automatically generated using FastAPI.
+After running the service locally:
+Swagger UI:
+http://localhost:8000/docs
+ReDoc:
+http://localhost:8000/redoc
+
 #Health Monitoring
 
 The service exposes:
@@ -117,6 +126,20 @@ Docker ensures reproducible deployment
 App Runner simplifies container hosting
 Terraform provides version-controlled infrastructure
 Health endpoint ensures production readiness
+
+#LangGraph Agent Execution
+POST /run
+Request:
+
+{
+  "query": "Analyze company growth signals"
+}
+
+Response:
+
+{
+  "result": "Agent reasoning output"
+}
 
 #Challenges & Notes
 
