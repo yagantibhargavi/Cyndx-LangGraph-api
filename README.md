@@ -1,4 +1,4 @@
-Cyndx Engineering Assessment — LangGraph Agent API
+ LangGraph Agent API
 
 This project implements a FastAPI-based conversational agent service powered by LangGraph, containerized with Docker, and provisioned using Terraform.
 It supports session-based interactions, message history, and agent-driven responses.
